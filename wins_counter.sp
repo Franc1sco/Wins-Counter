@@ -1,7 +1,7 @@
 
 /*  SM Wins Counter
  *
- *  Copyright (C) 2018 Francisco 'Franc1sco' García
+ *  Copyright (C) 2018 Francisco 'Franc1sco' García and Headline
  * 
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -44,7 +44,7 @@ new ga_iClientMVP[MAXPLAYERS +1] = {0, ...};
 public Plugin myinfo =
 {
 	name = "SM Wins Counter",
-	author = "Franc1sco franug", // credits to Headline too
+	author = "Franc1sco franug & Headline",
 	description = "",
 	version = DATA,
 	url = "http://steamcommunity.com/id/franug"
