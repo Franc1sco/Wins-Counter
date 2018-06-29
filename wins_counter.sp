@@ -39,7 +39,7 @@ new String:ga_sSteamID[MAXPLAYERS + 1][30];
 new ga_iClientMVP[MAXPLAYERS +1] = {0, ...};
 
 
-#define DATA "1.0"
+#define DATA "1.0.1"
 
 public Plugin myinfo =
 {
@@ -201,7 +201,7 @@ UpdateMvpStar(client)
     if (ga_bLoaded[client] && !StrEqual(ga_sSteamID[client], "", false))
     {
         decl String:sQuery[300];
-        Format(sQuery, sizeof(sQuery), "UPDATE table SET deaths=%i WHERE steamid=\"%s\"", ga_iClientMVP[client], ga_sSteamID[client]);
+        Format(sQuery, sizeof(sQuery), "UPDATE winscounter SET deaths=%i WHERE steamid=\"%s\"", ga_iClientMVP[client], ga_sSteamID[client]);
         SQL_TQuery(g_hDatabase, SQLCallback_Void, sQuery, 2);
     }
 }
@@ -323,7 +323,7 @@ LoadMvpCount(client)
             }
             
             decl String:sQuery[300];
-            Format(sQuery, sizeof(sQuery), "SELECT `deaths` FROM table WHERE steamid=\"%s\"", ga_sSteamID[client]);
+            Format(sQuery, sizeof(sQuery), "SELECT `deaths` FROM winscounter WHERE steamid=\"%s\"", ga_sSteamID[client]);
             SQL_TQuery(g_hDatabase, SQLCallback_CheckSQL, sQuery, GetClientUserId(client));
         }
     }
@@ -374,7 +374,7 @@ public SQLCallback_CheckSQL(Handle:hOwner, Handle:hHndl, const String:sError[], 
             else    //new player
             {
                 decl String:sQuery[300];
-                Format(sQuery, sizeof(sQuery), "INSERT INTO table (steamid, deaths) VALUES(\"%s\", 0)", ga_sSteamID[client]);
+                Format(sQuery, sizeof(sQuery), "INSERT INTO winscounter (steamid, deaths) VALUES(\"%s\", 0)", ga_sSteamID[client]);
                 SQL_TQuery(g_hDatabase, SQLCallback_Void, sQuery, 3);
                 SetClanTag(client);
                 ga_bLoaded[client] = true;
@@ -431,11 +431,11 @@ public SQLCallback_Connect(Handle:hOwner, Handle:hHndl, const String:sError[], a
         
         if (StrEqual(sDriver, "sqlite"))
         {
-            SQL_TQuery(g_hDatabase, SQLCallback_Void, "CREATE TABLE IF NOT EXISTS `table` (`id` int(20) PRIMARY KEY, `steamid` varchar(32) NOT NULL, `deaths` int(32) NOT NULL)", 0);
+            SQL_TQuery(g_hDatabase, SQLCallback_Void, "CREATE TABLE IF NOT EXISTS `winscounter` (`id` int(20) PRIMARY KEY, `steamid` varchar(32) NOT NULL, `deaths` int(32) NOT NULL)", 0);
         }
         else
         {
-            SQL_TQuery(g_hDatabase, SQLCallback_Void, "CREATE TABLE IF NOT EXISTS `table` ( `id` int(20) NOT NULL AUTO_INCREMENT, `steamid` varchar(32) NOT NULL, `deaths` int(32) NOT NULL, PRIMARY KEY (`id`)) DEFAULT CHARSET=latin1 AUTO_INCREMENT=1", 1);
+            SQL_TQuery(g_hDatabase, SQLCallback_Void, "CREATE TABLE IF NOT EXISTS `winscounter` ( `id` int(20) NOT NULL AUTO_INCREMENT, `steamid` varchar(32) NOT NULL, `deaths` int(32) NOT NULL, PRIMARY KEY (`id`)) DEFAULT CHARSET=latin1 AUTO_INCREMENT=1", 1);
         }
         
         if (g_bDebug)
@@ -461,7 +461,7 @@ stock Log(String:sPath[], const String:sMsg[], any:...)
     LogToFileEx(sLogFilePath, "%s", sFormattedMsg);
 }
 
-stock bool:IsValidClient(client, bool:bAllowBots = false, bool:bAllowDead = true)
+stock bool:IsValidClient(client, bool:bAllowBots = true, bool:bAllowDead = true)
 {
     if (!(1 <= client <= MaxClients) || !IsClientInGame(client) || (IsFakeClient(client) && !bAllowBots) || IsClientSourceTV(client) || IsClientReplay(client) || (!bAllowDead && !IsPlayerAlive(client)))
     {
