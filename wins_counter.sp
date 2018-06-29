@@ -125,7 +125,7 @@ public OnMapStart()
                     {
                         if (g_bDebug)
                         {
-                            Log("tabla.log","Loading #s for %L", i);
+                            Log("table.log","Loading #s for %L", i);
                         }
                         LoadMvpCount(i);
                     }
@@ -133,7 +133,7 @@ public OnMapStart()
                     {
                         if (g_bDebug)
                         {
-                            Log("tabla.log","Refreshing steam ID for client %L", i);
+                            Log("table.log","Refreshing steam ID for client %L", i);
                         }
                         CreateTimer(10.0, RefreshSteamID, GetClientUserId(i), TIMER_FLAG_NO_MAPCHANGE);
                     }
@@ -161,7 +161,7 @@ public Action:RefreshSteamID(Handle:hTimer, any:iUserID)
     {
         if (g_bDebug)
         {
-            Log("tabla.log","Re-refreshing steam ID for client %L", client);
+            Log("table.log","Re-refreshing steam ID for client %L", client);
         }
         CreateTimer(10.0, RefreshSteamID, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
     }
@@ -169,7 +169,7 @@ public Action:RefreshSteamID(Handle:hTimer, any:iUserID)
     {
         if (g_bDebug)
         {
-            Log("tabla.log","Loading mvpcount for client %L", client);
+            Log("table.log","Loading mvpcount for client %L", client);
         }
         LoadMvpCount(client);
     }
@@ -201,7 +201,7 @@ UpdateMvpStar(client)
     if (ga_bLoaded[client] && !StrEqual(ga_sSteamID[client], "", false))
     {
         decl String:sQuery[300];
-        Format(sQuery, sizeof(sQuery), "UPDATE tabla SET muertes=%i WHERE steamid=\"%s\"", ga_iClientMVP[client], ga_sSteamID[client]);
+        Format(sQuery, sizeof(sQuery), "UPDATE table SET deaths=%i WHERE steamid=\"%s\"", ga_iClientMVP[client], ga_sSteamID[client]);
         SQL_TQuery(g_hDatabase, SQLCallback_Void, sQuery, 2);
     }
 }
@@ -303,7 +303,7 @@ LoadMvpCount(client)
             CreateTimer(10.0, RefreshSteamID, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
             if (g_bDebug)
             {
-                Log("tabla.log","Refreshing Steam ID for client %L!", client);
+                Log("table.log","Refreshing Steam ID for client %L!", client);
             }
         }
         
@@ -312,18 +312,18 @@ LoadMvpCount(client)
             CreateTimer(1.0, RepeatCheckRank, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
             if (g_bDebug)
             {
-                Log("tabla.log","Database connection not established yet! Delaying loading of client %L", client);
+                Log("table.log","Database connection not established yet! Delaying loading of client %L", client);
             }
         }
         else
         {
             if (g_bDebug)
             {
-                Log("tabla.log","Sending database query to load client %L", client);
+                Log("table.log","Sending database query to load client %L", client);
             }
             
             decl String:sQuery[300];
-            Format(sQuery, sizeof(sQuery), "SELECT `muertes` FROM tabla WHERE steamid=\"%s\"", ga_sSteamID[client]);
+            Format(sQuery, sizeof(sQuery), "SELECT `deaths` FROM table WHERE steamid=\"%s\"", ga_sSteamID[client]);
             SQL_TQuery(g_hDatabase, SQLCallback_CheckSQL, sQuery, GetClientUserId(client));
         }
     }
@@ -356,7 +356,7 @@ public SQLCallback_CheckSQL(Handle:hOwner, Handle:hHndl, const String:sError[], 
             
             if (g_bDebug)
             {
-                Log("tabla.log","Player %L has been loaded from the database !", client);
+                Log("table.log","Player %L has been loaded from the database !", client);
             }
         }
         else
@@ -374,7 +374,7 @@ public SQLCallback_CheckSQL(Handle:hOwner, Handle:hHndl, const String:sError[], 
             else    //new player
             {
                 decl String:sQuery[300];
-                Format(sQuery, sizeof(sQuery), "INSERT INTO tabla (steamid, muertes) VALUES(\"%s\", 0)", ga_sSteamID[client]);
+                Format(sQuery, sizeof(sQuery), "INSERT INTO table (steamid, deaths) VALUES(\"%s\", 0)", ga_sSteamID[client]);
                 SQL_TQuery(g_hDatabase, SQLCallback_Void, sQuery, 3);
                 SetClanTag(client);
                 ga_bLoaded[client] = true;
@@ -382,7 +382,7 @@ public SQLCallback_CheckSQL(Handle:hOwner, Handle:hHndl, const String:sError[], 
                 LogMessage("New player %L has been added to the database!", client);
                 if (g_bDebug)
                 {
-                    Log("tabla.log","New player %L has been added to the database!", client);
+                    Log("table.log","New player %L has been added to the database!", client);
                 }
             }
         }
@@ -396,9 +396,9 @@ DeleteDuplicates()
     {
         if (g_bDebug)
         {
-            Log("tabla.log","Duplicates detected in database. Deleting duplicate Steam IDs!");
+            Log("table.log","Duplicates detected in database. Deleting duplicate Steam IDs!");
         }
-        SQL_TQuery(g_hDatabase, SQLCallback_Void, "delete tabla from tabla inner join (select min(id) minid, steamid from tabla group by steamid having count(1) > 1) as duplicates on (duplicates.steamid = tabla.steamid and duplicates.minid <> tabla.id)", 4);
+        SQL_TQuery(g_hDatabase, SQLCallback_Void, "delete table from table inner join (select min(id) minid, steamid from table group by steamid having count(1) > 1) as duplicates on (duplicates.steamid = table.steamid and duplicates.minid <> table.id)", 4);
     }
 }*/
 
@@ -431,16 +431,16 @@ public SQLCallback_Connect(Handle:hOwner, Handle:hHndl, const String:sError[], a
         
         if (StrEqual(sDriver, "sqlite"))
         {
-            SQL_TQuery(g_hDatabase, SQLCallback_Void, "CREATE TABLE IF NOT EXISTS `tabla` (`id` int(20) PRIMARY KEY, `steamid` varchar(32) NOT NULL, `muertes` int(32) NOT NULL)", 0);
+            SQL_TQuery(g_hDatabase, SQLCallback_Void, "CREATE TABLE IF NOT EXISTS `table` (`id` int(20) PRIMARY KEY, `steamid` varchar(32) NOT NULL, `deaths` int(32) NOT NULL)", 0);
         }
         else
         {
-            SQL_TQuery(g_hDatabase, SQLCallback_Void, "CREATE TABLE IF NOT EXISTS `tabla` ( `id` int(20) NOT NULL AUTO_INCREMENT, `steamid` varchar(32) NOT NULL, `muertes` int(32) NOT NULL, PRIMARY KEY (`id`)) DEFAULT CHARSET=latin1 AUTO_INCREMENT=1", 1);
+            SQL_TQuery(g_hDatabase, SQLCallback_Void, "CREATE TABLE IF NOT EXISTS `table` ( `id` int(20) NOT NULL AUTO_INCREMENT, `steamid` varchar(32) NOT NULL, `deaths` int(32) NOT NULL, PRIMARY KEY (`id`)) DEFAULT CHARSET=latin1 AUTO_INCREMENT=1", 1);
         }
         
         if (g_bDebug)
         {
-            Log("tabla.log","Successfully connected to database!");
+            Log("table.log","Successfully connected to database!");
         }
     }
 }
