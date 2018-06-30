@@ -39,7 +39,7 @@ new String:ga_sSteamID[MAXPLAYERS + 1][30];
 new ga_iClientMVP[MAXPLAYERS +1] = {0, ...};
 
 
-#define DATA "1.0.1"
+#define DATA "1.1"
 
 public Plugin myinfo =
 {
@@ -95,6 +95,12 @@ public OnCVarChange(Handle:hCVar, const String:sOldValue[], const String:sNewVal
     else if (hCVar == g_hPluginEnabled)
     {
         g_bPluginEnabled = GetConVarBool(g_hPluginEnabled);
+        
+        if(g_bPluginEnabled)
+        	RefreshAll();
+        else
+        	RemoveAll();
+        	
     }
     else if (hCVar == g_hDebug)
     {
@@ -141,6 +147,20 @@ public OnMapStart()
             }
         }
     }
+}
+
+void RefreshAll()
+{
+	for (new i = 1; i <= MaxClients; i++)
+		if (IsValidClient(i))
+			LoadMvpCount(i);
+}
+
+void RemoveAll()
+{
+	for (new i = 1; i <= MaxClients; i++)
+		if (IsValidClient(i))
+			CS_SetClientClanTag(i, " ");
 }
 
 public Action:RefreshSteamID(Handle:hTimer, any:iUserID)
@@ -219,7 +239,7 @@ public Action:Timer_UpdateClanTag(Handle:hTimer, any:client)
 
 SetClanTag(client)
 {
-    if (IsValidClient(client, false))
+    if (g_bPluginEnabled && IsValidClient(client, false))
     {
         if (ga_iClientMVP[client] == 1)
         {
@@ -253,11 +273,14 @@ public Action:Event_RoundEnd(Handle:hEvent, const String:sName[], bool:bDontBroa
 
 public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 {
+	if (!g_bPluginEnabled)return;
+	
+	
 	int count = 0;
 	int client;
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsValidClient(i) && IsPlayerAlive(i))
+		if (IsValidClient(i, true) && IsPlayerAlive(i))
 		{
 			client = i;
 			count++;
@@ -461,7 +484,7 @@ stock Log(String:sPath[], const String:sMsg[], any:...)
     LogToFileEx(sLogFilePath, "%s", sFormattedMsg);
 }
 
-stock bool:IsValidClient(client, bool:bAllowBots = true, bool:bAllowDead = true)
+stock bool:IsValidClient(client, bool:bAllowBots = false, bool:bAllowDead = true)
 {
     if (!(1 <= client <= MaxClients) || !IsClientInGame(client) || (IsFakeClient(client) && !bAllowBots) || IsClientSourceTV(client) || IsClientReplay(client) || (!bAllowDead && !IsPlayerAlive(client)))
     {
