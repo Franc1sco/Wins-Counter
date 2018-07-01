@@ -39,7 +39,7 @@ new String:ga_sSteamID[MAXPLAYERS + 1][30];
 new ga_iClientMVP[MAXPLAYERS +1] = {0, ...};
 
 
-#define DATA "1.1"
+#define DATA "1.2"
 
 public Plugin myinfo =
 {
@@ -83,6 +83,9 @@ public OnPluginStart()
     HookEvent("player_team", Event_PlayerSpawn);
     HookEvent("player_death", Event_PlayerDeath);
     //HookEvent("round_end", Event_RoundEnd);
+    
+    
+    RegAdminCmd("sm_setwins", CommandSetWins, ADMFLAG_SLAY);
     
 }
 
@@ -474,6 +477,48 @@ public SQLCallback_Void(Handle:hOwner, Handle:hHndl, const String:sError[], any:
     {
         SetFailState("Error (%i): %s", iData, sError);
     }
+}
+
+
+// Command based on yash1441 br_tag plugin with some improvements/changes
+public Action CommandSetWins(int client, int args)
+{                           
+	char arg1[32], arg2[20];
+	GetCmdArg(1, arg1, sizeof(arg1));
+	GetCmdArg(2, arg2, sizeof(arg2));
+	int wins = StringToInt(arg2);
+
+	if (args != 2)
+	{
+		ReplyToCommand(client, "sm_setwins <name or #userid> <wins>");
+		return Plugin_Continue;
+	}
+
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count; bool tn_is_ml;
+
+	if ((target_count = ProcessTargetString(
+	arg1,
+	client,
+	target_list,
+	MAXPLAYERS,
+	COMMAND_TARGET_NONE,
+	target_name,
+	sizeof(target_name),
+	tn_is_ml)) <= 0)
+	{
+		ReplyToTargetError(client, target_count);
+		return Plugin_Continue;
+	}
+
+	for (int i = 0; i < target_count; i++)
+	{
+		ga_iClientMVP[target_list[i]] = wins;
+		SetClanTag(target_list[i]);
+		ShowActivity2(client, "[Wins Counter] ", "Set wins of %N to %i", target_list[i], wins);
+	}
+	
+	return Plugin_Handled;
 }
 
 stock Log(String:sPath[], const String:sMsg[], any:...)
